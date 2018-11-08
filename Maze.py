@@ -5,31 +5,16 @@ Created on Thu Jun 14 15:06:57 2018
 @author: tchow
 """
 
-import random, math, itertools, queue
+import random, itertools, queue
 from PIL import Image
 from DisjointSets import DisjointSets
 from Direction import Direction
 from Orientation import Orientation
 from MazeCell import MazeCell
+from QueueItem import QueueItem
+from Color import Color
+from MazeSolution import MazeSolution
 
-class Color(object):
-    BLACK = (0,0,0)
-    WHITE = (255,255,255)
-    RED = (255,0,0)
-
-class MazeSolution(object):
-    def __init__(self, path = [], found = False, endRow = None, endCol = None):
-        self.path = path
-        self.found = found
-        self.endRow = endRow
-        self.endCol = endCol
-        
-class QueueItem(object):
-    def __init__(self, row, column, direction, parent = None):
-        self.row = row
-        self.col = column
-        self.direction = direction
-        self.parent = parent
 
 class Maze(object):
 
@@ -49,9 +34,9 @@ class Maze(object):
         self.canvasWidth = width * self.ScaleFactor
         self.canvasHeight = height * self.ScaleFactor
         self.disjointSets = DisjointSets(width*height)
-        self.mazeCells = [[MazeCell(x,y) for y in range(0,height)] for x in range(0,width)]
+        self.mazeCells = [[MazeCell(x,y) for y in range(height)] for x in range(0,width)]
     
-        for i in range(0,2):
+        for i in range(2):
             Xs = list(range(self.width))
             Ys = list(range(self.height))
             randomCoords = list(itertools.product(Xs,Ys)) # cartesian product X x Y
@@ -115,6 +100,7 @@ class Maze(object):
     def _findSetIndex(self, row, column, direction = Direction.NONE):
         if direction is Direction.NONE:
             return (row*self.width) + column
+        
         return (row*self.width) + column + 1 if direction is Direction.RIGHT else ((row+1)*self.width)+column
     
     
@@ -216,7 +202,7 @@ class Maze(object):
         imageWidth = (self.canvasWidth)+1
         imageHeight = (self.canvasHeight)+1
         size = (imageWidth,imageHeight)
-        img = Image.new('RGB',size,"white")
+        img = Image.new('RGB',size,Color.WHITE.name)
         pixels = img.load()
         
         self._blackenTop(pixels)
@@ -230,8 +216,8 @@ class Maze(object):
         img = self._drawMaze()
         pixels = img.load()
         
-        currentRow = math.floor(self.ScaleFactor/2)
-        currentCol = math.floor(self.ScaleFactor/2)
+        currentRow = self.ScaleFactor // 2
+        currentCol = self.ScaleFactor // 2
         
         for step in solution:
             if (step is Direction.DOWN):
@@ -250,11 +236,16 @@ class Maze(object):
                 self._colorWall(pixels, Orientation.VERTICAL, currentRow-self.ScaleFactor, currentRow,currentCol, Color.RED)
                 currentRow -= self.ScaleFactor
         
-        currentRow += math.floor(self.ScaleFactor/2)
-        currentCol -= math.floor(self.ScaleFactor/2)
+        currentRow += self.ScaleFactor // 2
+        currentCol -= self.ScaleFactor // 2
         
         # Drawing exit
-        self._colorWall(pixels, Orientation.HORIZONTAL,currentCol,currentCol+self.ScaleFactor,currentRow,Color.WHITE)
+        self._colorWall(pixels, \
+                        Orientation.HORIZONTAL, \
+                        currentCol, \
+                        currentCol + self.ScaleFactor,\
+                        currentRow,\
+                        Color.WHITE)
         
         img.show()
         
@@ -287,11 +278,11 @@ class Maze(object):
     def _colorWall(self, pixels, orientation, start, end, fixedDimension, color):
         if (orientation is Orientation.VERTICAL):
             for i in range(start,end):
-                pixels[fixedDimension,i] = color
+                pixels[fixedDimension,i] = tuple(color)
         
         elif (orientation is Orientation.HORIZONTAL):
             for i in range(start,end):
-                pixels[i,fixedDimension] = color
+                pixels[i,fixedDimension] = tuple(color)
             
             
     def _canTravel(self,row,column,direction):
@@ -312,14 +303,18 @@ class Maze(object):
         
         
     def _checkBoundary(self,row,column,direction):
+        MIN_HEIGHT,MIN_WIDTH = 0,0
+        MAX_HEIGHT = self.height-1
+        MAX_WIDTH = self.width-1
+        
         if (direction is Direction.DOWN):
-            return (row + 1 <= self.height-1)
+            return (row + 1 <= MAX_HEIGHT)
         elif (direction is Direction.RIGHT):
-            return (column + 1 <= self.width-1)
+            return (column + 1 <= MAX_WIDTH)
         elif (direction is Direction.LEFT):
-            return (column - 1 >= 0)
+            return (column - 1 >= MIN_WIDTH)
         elif (direction is Direction.UP):
-            return (row - 1 >= 0)
+            return (row - 1 >= MIN_HEIGHT)
     
     
     def _hasWall(self,row,column,direction):
