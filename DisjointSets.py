@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 14 11:17:14 2018
-
-@author: tchow
-"""
-
 class DisjointSets:
     
     def __init__(self, size):

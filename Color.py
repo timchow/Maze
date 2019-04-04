@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov  6 17:07:26 2018
-
-@author: tchow
-"""
-
 # This class was formed to create easier access to Color.
 # So that Color.BLACK can be manipulated by an iterating 
 # function such as tuple/list and allowing Color.BLACK.name 

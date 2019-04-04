@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 14 15:02:36 2018
-
-@author: tchow
-"""
-
 class MazeCell:
 
     RIGHT_WALL_OFFSET_PX = 10
