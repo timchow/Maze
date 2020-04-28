@@ -82,7 +82,7 @@ class Maze(object):
 
         return img
 
-    def _drawMazeWithSolution(self, solution):
+    def DrawMaze(self, solution):
         img = self._drawMaze()
         pixels = img.load()
 
@@ -109,6 +109,49 @@ class Maze(object):
                 self._colorWall(pixels, Orientation.VERTICAL, currentRow -
                                 self.SCALE_FACTOR, currentRow, currentCol, Color.RED)
                 currentRow -= self.SCALE_FACTOR
+
+        currentRow += self.SCALE_FACTOR // 2
+        currentCol -= self.SCALE_FACTOR // 2
+
+        # Drawing exit
+        self._colorWall(pixels,
+                        Orientation.HORIZONTAL,
+                        currentCol,
+                        currentCol + self.SCALE_FACTOR,
+                        currentRow,
+                        Color.WHITE)
+
+        img.show()
+    
+    def DrawMazeStepWise(self, solution):
+        img = self._drawMaze()
+        pixels = img.load()
+
+        currentRow = self.SCALE_FACTOR // 2
+        currentCol = self.SCALE_FACTOR // 2
+
+        for step in solution.path:
+            if (step is Direction.DOWN):
+                self._colorWall(pixels, Orientation.VERTICAL, currentRow,
+                                currentRow+self.SCALE_FACTOR, currentCol, Color.RED)
+                currentRow += self.SCALE_FACTOR
+
+            elif (step is Direction.RIGHT):
+                self._colorWall(pixels, Orientation.HORIZONTAL, currentCol,
+                                currentCol+self.SCALE_FACTOR, currentRow, Color.RED)
+                currentCol += self.SCALE_FACTOR
+
+            elif (step is Direction.LEFT):
+                self._colorWall(pixels, Orientation.HORIZONTAL, currentCol -
+                                self.SCALE_FACTOR, currentCol, currentRow, Color.RED)
+                currentCol -= self.SCALE_FACTOR
+
+            elif (step is Direction.UP):
+                self._colorWall(pixels, Orientation.VERTICAL, currentRow -
+                                self.SCALE_FACTOR, currentRow, currentCol, Color.RED)
+                currentRow -= self.SCALE_FACTOR
+            
+            #img.show()
 
         currentRow += self.SCALE_FACTOR // 2
         currentCol -= self.SCALE_FACTOR // 2
@@ -201,11 +244,14 @@ class Maze(object):
 
 
 if __name__ == '__main__':
+    mazeWidth = 20
+    mazeHeight = 20
+
     maze = Maze()
-    maze.MakeMaze(20, 20)
+    maze.MakeMaze(mazeWidth, mazeHeight)
 
     mazeSolution = MazeSolver(maze).Solve()
-    maze._drawMazeWithSolution(mazeSolution)
+    maze.DrawMaze(mazeSolution)
 
     mazeSolution2 = MazeSolver(maze).SolveBFS()
-    maze._drawMazeWithSolution(mazeSolution2)
+    maze.DrawMaze(mazeSolution2)
