@@ -27,7 +27,7 @@ class Maze(object):
         self.canvasHeight = height * self.SCALE_FACTOR
         self.disjointSets = DisjointSets(width*height)
         self.mazeCells = [[MazeCell(x, y) for y in range(height)]
-                          for x in range(0, width)]
+                          for x in range(width)]
 
         Xs = list(range(self.width))
         Ys = list(range(self.height))
@@ -253,5 +253,5 @@ if __name__ == '__main__':
     mazeSolution = MazeSolver(maze).Solve()
     maze.DrawMaze(mazeSolution)
 
-    mazeSolution2 = MazeSolver(maze).SolveBFS()
-    maze.DrawMaze(mazeSolution2)
+    #mazeSolution2 = MazeSolver(maze).SolveBFS()
+    #maze.DrawMaze(mazeSolution2)
