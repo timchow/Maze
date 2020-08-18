@@ -1,5 +1,8 @@
 import random
 import itertools
+import cv2
+import numpy as np
+
 from PIL import Image
 from DisjointSets import DisjointSets
 from Direction import Direction
@@ -13,12 +16,14 @@ class Maze(object):
 
     SCALE_FACTOR = 10
 
-    def __init__(self):
+    def __init__(self, width = 0, height = 0):
         self.width = 0
         self.height = 0
         self.canvasWidth = 0
         self.canvasHeight = 0
         self.mazeCells = []
+
+        self.MakeMaze(width,height)
 
     def MakeMaze(self, width, height):
         self.width = width
@@ -69,68 +74,12 @@ class Maze(object):
         elif (direction is Direction.DOWN):
             mazeCell.downWallExists = exists
 
-    def _drawMaze(self):
-        imageWidth = (self.canvasWidth)+1
-        imageHeight = (self.canvasHeight)+1
-        size = (imageWidth, imageHeight)
-        img = Image.new('RGB', size, Color.WHITE.name)
-        pixels = img.load()
-
-        self._blackenTop(pixels)
-        self._blackenLeft(pixels)
-        self._blackenCells(pixels)
-
-        return img
-
-    def DrawMaze(self, solution):
-        img = self._drawMaze()
-        pixels = img.load()
-
+    def DrawSolution(self, pixels, solution):
         currentRow = self.SCALE_FACTOR // 2
         currentCol = self.SCALE_FACTOR // 2
 
         for step in solution.path:
-            if (step is Direction.DOWN):
-                self._colorWall(pixels, Orientation.VERTICAL, currentRow,
-                                currentRow+self.SCALE_FACTOR, currentCol, Color.RED)
-                currentRow += self.SCALE_FACTOR
-
-            elif (step is Direction.RIGHT):
-                self._colorWall(pixels, Orientation.HORIZONTAL, currentCol,
-                                currentCol+self.SCALE_FACTOR, currentRow, Color.RED)
-                currentCol += self.SCALE_FACTOR
-
-            elif (step is Direction.LEFT):
-                self._colorWall(pixels, Orientation.HORIZONTAL, currentCol -
-                                self.SCALE_FACTOR, currentCol, currentRow, Color.RED)
-                currentCol -= self.SCALE_FACTOR
-
-            elif (step is Direction.UP):
-                self._colorWall(pixels, Orientation.VERTICAL, currentRow -
-                                self.SCALE_FACTOR, currentRow, currentCol, Color.RED)
-                currentRow -= self.SCALE_FACTOR
-
-        currentRow += self.SCALE_FACTOR // 2
-        currentCol -= self.SCALE_FACTOR // 2
-
-        # Drawing exit
-        self._colorWall(pixels,
-                        Orientation.HORIZONTAL,
-                        currentCol,
-                        currentCol + self.SCALE_FACTOR,
-                        currentRow,
-                        Color.WHITE)
-
-        img.show()
-    
-    def DrawMazeStepWise(self, solution):
-        img = self._drawMaze()
-        pixels = img.load()
-
-        currentRow = self.SCALE_FACTOR // 2
-        currentCol = self.SCALE_FACTOR // 2
-
-        for step in solution.path:
+            cv2.imshow('image',pixels)
             if (step is Direction.DOWN):
                 self._colorWall(pixels, Orientation.VERTICAL, currentRow,
                                 currentRow+self.SCALE_FACTOR, currentCol, Color.RED)
@@ -151,7 +100,7 @@ class Maze(object):
                                 self.SCALE_FACTOR, currentRow, currentCol, Color.RED)
                 currentRow -= self.SCALE_FACTOR
             
-            #img.show()
+            cv2.waitKey(0)
 
         currentRow += self.SCALE_FACTOR // 2
         currentCol -= self.SCALE_FACTOR // 2
@@ -164,8 +113,6 @@ class Maze(object):
                         currentRow,
                         Color.WHITE)
 
-        img.show()
-
     def _blackenCells(self, pixels):
         for row in range(self.height):
             for column in range(self.width):
@@ -173,14 +120,12 @@ class Maze(object):
 
                 if (mazeCell.rightWallExists):
                     rowStart = (row*self.SCALE_FACTOR)
-                    columnFixed = (column*self.SCALE_FACTOR) + \
-                        MazeCell.RIGHT_WALL_OFFSET_PX
+                    columnFixed = (column*self.SCALE_FACTOR) + MazeCell.RIGHT_WALL_OFFSET_PX
                     self._colorWall(pixels, Orientation.VERTICAL, rowStart,
                                     rowStart+self.SCALE_FACTOR, columnFixed, Color.BLACK)
 
                 if (mazeCell.downWallExists):
-                    rowFixed = (row*self.SCALE_FACTOR) + \
-                        MazeCell.DOWN_WALL_OFFSET_PX
+                    rowFixed = (row*self.SCALE_FACTOR) + MazeCell.DOWN_WALL_OFFSET_PX
                     columnStart = (column*self.SCALE_FACTOR)
                     self._colorWall(pixels, Orientation.HORIZONTAL, columnStart,
                                     columnStart+self.SCALE_FACTOR, rowFixed, Color.BLACK)
@@ -241,17 +186,26 @@ class Maze(object):
             return self.mazeCells[row][column-1].rightWallExists
         elif (direction is Direction.UP):
             return self.mazeCells[row-1][column].downWallExists
-
+            
+    def DrawMaze_CV(self, mazeSolution):
+        imageWidth = (self.canvasWidth)+1
+        imageHeight = (self.canvasHeight)+1
+        RGB_DIMENSION = 3
+        # 2D array of 1D arays of length 3 for pixel representation
+        pixels = np.repeat(255,imageWidth*imageHeight*RGB_DIMENSION).astype('u1') \
+                    .reshape((imageWidth,imageHeight,RGB_DIMENSION))
+        
+        self._blackenTop(pixels)
+        self._blackenLeft(pixels)
+        self._blackenCells(pixels)
+        self.DrawSolution(pixels, mazeSolution)
 
 if __name__ == '__main__':
     mazeWidth = 20
     mazeHeight = 20
 
-    maze = Maze()
-    maze.MakeMaze(mazeWidth, mazeHeight)
-
+    maze = Maze(mazeWidth,mazeHeight)
     mazeSolution = MazeSolver(maze).Solve()
-    maze.DrawMaze(mazeSolution)
+    maze.DrawMaze_CV(mazeSolution)
 
-    #mazeSolution2 = MazeSolver(maze).SolveBFS()
-    #maze.DrawMaze(mazeSolution2)
+    cv2.destroyAllWindows()
